@@ -204,7 +204,35 @@ void merge_clusters(struct cluster_t *c1, struct cluster_t *c2)
     assert(c1 != NULL);
     assert(c2 != NULL);
 
-    // TODO
+    // TODO done
+    dfmt(
+        "merging clusters at "
+        "%p (size - %d, capacity %d) and " 
+        "%p (size - %d, capacity %d)", 
+        c1, 
+        c1->size, 
+        c1->capacity, 
+        c2, 
+        c2->size, 
+        c2->capacity
+        );
+
+    for (int i = 0; i < c2->size; i++)
+    {
+        append_cluster(c1, c2->obj[i]);
+    }
+
+    dfmt(
+        "merged clusters at "
+        "%p (size - %d, capacity %d) and " 
+        "%p (size - %d, capacity %d)", 
+        c1, 
+        c1->size, 
+        c1->capacity, 
+        c2, 
+        c2->size, 
+        c2->capacity
+        );
 }
 
 /**********************************************************************/
@@ -327,15 +355,31 @@ int main(int argc, char *argv[])
     struct cluster_t *clusters;
 
     // TODO
+    debug("now lets try init_cluster + clear_cluster");
     struct cluster_t cluster;
     struct cluster_t *c = &cluster;
     init_cluster(c, 16);  // tady muze byt c.obj NULL
     clear_cluster(c);
+
+    debug("now lets try append_cluster");
     struct obj_t test_obj;
     append_cluster(c, test_obj); // tady muze byt c.obj NULL
     for (int i = 0; i < 15; i++)
     {
         append_cluster(c, test_obj);
     }
+    
+    debug("now lets try merge_clusters");
+    struct cluster_t first_cluster;
+    struct cluster_t second_cluster;
+    init_cluster(&first_cluster, 64);
+    init_cluster(&second_cluster, 64);
+    for (int i = 0; i < 16; i++)
+    {
+        append_cluster(&first_cluster, test_obj);
+        append_cluster(&second_cluster, test_obj);
+    }
+    merge_clusters(&first_cluster, &second_cluster);
+    
     return 0;
 }
