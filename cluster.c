@@ -248,7 +248,21 @@ int remove_cluster(struct cluster_t *carr, int narr, int idx)
     assert(idx < narr);
     assert(narr > 0);
 
-    // TODO
+    // TODO done
+    /*
+        iteruje skrze pole a v momente kdy narazi na polozku k odstraneni
+        posouva v kazde dalsi iteraci prvky o jeden vlevo
+    */
+    int offset = 0;
+    for (int i; i < narr; i++)
+    {
+        carr[i + offset] = carr[i];
+        if (i == idx)
+        {
+            offset = -1;
+        }
+    }
+    return narr - 1;
 }
 
 /*
@@ -380,6 +394,8 @@ int main(int argc, char *argv[])
         append_cluster(&second_cluster, test_obj);
     }
     merge_clusters(&first_cluster, &second_cluster);
+
+    
     
     return 0;
 }
