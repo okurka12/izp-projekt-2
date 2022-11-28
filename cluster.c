@@ -274,6 +274,9 @@ float obj_distance(struct obj_t *o1, struct obj_t *o2)
     assert(o2 != NULL);
 
     // TODO
+    float xdelta = o1->x - o2->x;
+    float ydelta = o1->y - o2->y;
+    return sqrtf(xdelta * xdelta + ydelta * ydelta);
 }
 
 /*
