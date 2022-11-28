@@ -95,7 +95,16 @@ void init_cluster(struct cluster_t *c, int cap)
     assert(cap >= 0);
 
     // TODO
-
+    c->size = 0;
+    c->obj = malloc(sizeof(struct obj_t) * cap);
+    if (c->obj == NULL)
+    {
+        dfmt("allocating failed for cluster_t at %p", c);
+        c->capacity = 0;
+        return;
+    }
+    dfmt("allocated memory for %d obj_ts in cluster_t at %p", cap, c);
+    c->capacity = cap;
 }
 
 /*
@@ -104,6 +113,16 @@ void init_cluster(struct cluster_t *c, int cap)
 void clear_cluster(struct cluster_t *c)
 {
     // TODO
+    struct obj_t empty_obj;
+    empty_obj.id = 0;
+    empty_obj.x = 0;
+    empty_obj.y = 0;
+
+    for (int i = 0; i < c->capacity; i++)
+    {
+        c->obj[i] = empty_obj;
+        dfmt("zeroed %dth element of cluster_t at %p", i, c);
+    }
 }
 
 /// Chunk of cluster objects. Value recommended for reallocation.
@@ -280,4 +299,6 @@ int main(int argc, char *argv[])
     struct cluster_t *clusters;
 
     // TODO
+    init_cluster(clusters, 16);
+    clear_cluster(clusters);
 }
