@@ -4,10 +4,10 @@
 **    251301    **
 **              **
 **   Created:   **
-**  2022-11-27  **
+**  2022-11-28  **
 **              **
 ** Last edited: **
-**  2022-11-27  **
+**  2022-11-28  **
 *****************/
 
 /**
@@ -94,7 +94,7 @@ void init_cluster(struct cluster_t *c, int cap)
     assert(c != NULL);
     assert(cap >= 0);
 
-    // TODO
+    // TODO done
     c->size = 0;
     c->obj = malloc(sizeof(struct obj_t) * cap);
     if (c->obj == NULL)
@@ -112,7 +112,7 @@ void init_cluster(struct cluster_t *c, int cap)
  */
 void clear_cluster(struct cluster_t *c)
 {
-    // TODO
+    // TODO done
     struct obj_t empty_obj;
     empty_obj.id = 0;
     empty_obj.x = 0;
@@ -123,6 +123,9 @@ void clear_cluster(struct cluster_t *c)
         c->obj[i] = empty_obj;
         dfmt("zeroed %dth element of cluster_t at %p", i, c);
     }
+
+    c->size = 0;
+    dfmt("set size to zero for cluster_t at %p", c);
 }
 
 /// Chunk of cluster objects. Value recommended for reallocation.
@@ -158,7 +161,32 @@ struct cluster_t *resize_cluster(struct cluster_t *c, int new_cap)
  */
 void append_cluster(struct cluster_t *c, struct obj_t obj)
 {
-    // TODO
+    // TODO done
+    dfmt(
+        "appending to cluster_t at %p (size %d, capacity %d)", 
+        c, 
+        c->size, 
+        c->capacity
+        );
+
+    if (c->size == c->capacity)
+    {
+        resize_cluster(c, c->capacity + CLUSTER_CHUNK);
+        if (c->obj == NULL)
+        {
+            debug("resizing failed, aborting append_cluster");
+            return;
+        }
+    }
+    c->obj[c->size] = obj;
+    c->size += 1;
+
+    dfmt(
+        "appended successfully to cluster_t at %p (size %d, capacity %d)", 
+        c, 
+        c->size, 
+        c->capacity
+        );
 }
 
 /*
@@ -299,6 +327,15 @@ int main(int argc, char *argv[])
     struct cluster_t *clusters;
 
     // TODO
-    init_cluster(clusters, 16);
-    clear_cluster(clusters);
+    struct cluster_t cluster;
+    struct cluster_t *c = &cluster;
+    init_cluster(c, 16);  // tady muze byt c.obj NULL
+    clear_cluster(c);
+    struct obj_t test_obj;
+    append_cluster(c, test_obj); // tady muze byt c.obj NULL
+    for (int i = 0; i < 15; i++)
+    {
+        append_cluster(c, test_obj);
+    }
+    return 0;
 }
