@@ -490,6 +490,7 @@ int load_clusters(char *filename, struct cluster_t **arr)
         (*arr)[cluster_no] = current_cluster;
         clear_cluster(&current_cluster);
     }
+    return cluster_count;
 }
 
 /*
@@ -511,6 +512,17 @@ int main(int argc, char *argv[])
     struct cluster_t *clusters;
 
     // TODO
+    if (argc < 3)
+    {
+        fprintf(stderr, "Usage: cluster [FILE] [CLUSTER_COUNT]\n");
+    }
+    int cluster_count = load_clusters(argv[1], &clusters);
+    if (cluster_count == -1 || clusters == NULL)
+    {
+        fprintf(stderr, "Aborting execution...\n");
+        return 1;
+    }
+    print_clusters(clusters, cluster_count);
         
     
     return 0;
