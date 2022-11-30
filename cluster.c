@@ -387,7 +387,7 @@ int load_clusters(char *filename, struct cluster_t **arr)
     /* omezeni delky radku pro vstup */
     const int int_maxlen = 10;  // 2^31 ma 10 cifer
     const int first_line_maxlen = int_maxlen + 7 + 1;  // format 'count='
-    const int cluster_line_maxlen = 3 * int_maxlen + 3 + 1  // id, x, y, 3 ' '
+    const int cluster_line_maxlen = 3 * int_maxlen + 3 + 1;  // id, x, y, 3 ' '
     
     /* pokus o otevreni souboru */
     FILE *file_obj;
@@ -433,7 +433,7 @@ int load_clusters(char *filename, struct cluster_t **arr)
     char abort = 0;
 
     /* iterace skrze radky souboru */
-    for (int cluster_no, cluster_no < cluster_count; cluster_no++)
+    for (int cluster_no = 0; cluster_no < cluster_count; cluster_no++)
     {
         /* nacteni radku */
         if (fgets(current_cluster_line, cluster_line_maxlen, file_obj) == NULL)
@@ -466,7 +466,7 @@ int load_clusters(char *filename, struct cluster_t **arr)
         if (current_cluster.obj == NULL)
         {
             fprintf(stderr, "Couldnt allocate memory for cluster objects.\n");
-            abort = 1
+            abort = 1;
         }
 
         /* abort pokud nektery z pokusu vyse selhal */
