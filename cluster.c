@@ -113,6 +113,9 @@ void init_cluster(struct cluster_t *c, int cap)
 void clear_cluster(struct cluster_t *c)
 {
     // TODO done
+
+    /* Naplneni nedefinovanych polozek shluku nulovym objektem asi neni 
+    *  potreba, ale uz jsem to napsal, tak to tu necham. */
     struct obj_t empty_obj;
     empty_obj.id = 0;
     empty_obj.x = 0;
@@ -380,6 +383,113 @@ int load_clusters(char *filename, struct cluster_t **arr)
     assert(arr != NULL);
 
     // TODO
+    
+    /* omezeni delky radku pro vstup */
+    const int int_maxlen = 10;  // 2^31 ma 10 cifer
+    const int first_line_maxlen = int_maxlen + 7 + 1;  // format 'count='
+    const int cluster_line_maxlen = 3 * int_maxlen + 3 + 1  // id, x, y, 3 ' '
+    
+    /* pokus o otevreni souboru */
+    FILE *file_obj;
+    if ((file_obj = fopen(filename, "r")) == NULL)
+    {
+        *arr = NULL;
+        fprintf(stderr, "\"%s\" does not exist.\n");
+        return -1;
+    }
+
+    /* pokus o zjisteni poctu shluku */
+    int cluster_count = 0;
+    char first_line[first_line_maxlen];
+
+    if (fgets(first_line, first_line_maxlen, file_obj) == NULL)
+    {
+        *arr = NULL;
+        fprintf(stderr, "Given file is apparently empty.\n");
+        return -1;
+    }
+    dfmt("nacten prvni radek \"%s\"", first_line);
+    
+    if (sscanf(first_line, "count=%i", &cluster_count) != 1)
+    {
+        *arr = NULL;
+        fprintf(stderr, "Wrong formatted first line.\n");
+        return -1;
+    }
+
+    /* V tento moment uz docela jiste mame pocet shluku,
+    *  pojdme alokovat pamet. */
+    if ((*arr = malloc(cluster_count * sizeof(struct cluster_t))) == NULL)
+    {
+        fprintf(stderr, "Memory for %d clusters couldn't be allocated\n");
+        return -1;
+    }
+
+    /* Prostor pro struktury shluku mame, nyni je nacteme ze souboru */
+    char current_cluster_line[cluster_line_maxlen];
+    struct cluster_t current_cluster;
+    struct obj_t current_obj;
+    int id, x, y;
+    char abort = 0;
+
+    /* iterace skrze radky souboru */
+    for (int cluster_no, cluster_no < cluster_count; cluster_no++)
+    {
+        /* nacteni radku */
+        if (fgets(current_cluster_line, cluster_line_maxlen, file_obj) == NULL)
+        {
+            fprintf(stderr, "Error parsing line %d\n", cluster_no + 2);
+            abort = 1;
+        }
+
+        /* parsovani radku */
+        if (sscanf(current_cluster_line, "%i %i %i", &id, &x, &y) != 3)
+        {
+            fprintf(stderr, "Wrong format on line %d\n", cluster_no + 2);
+            abort = 1;
+        }
+
+        /* kontrola jestli neskoncil soubor */
+        if (feof(file_obj) && cluster_no < cluster_count - 1)
+        {
+            fprintf(
+                    stderr, 
+                    "Too few clusters (should be %d, found %d)\n", 
+                    cluster_count, 
+                    cluster_no
+                   );
+            abort = 1;
+        }
+
+        /* pokus o inicializaci jednoobjektoveho shluku */
+        init_cluster(&current_cluster, 1);
+        if (current_cluster.obj == NULL)
+        {
+            fprintf(stderr, "Couldnt allocate memory for cluster objects.\n");
+            abort = 1
+        }
+
+        /* abort pokud nektery z pokusu vyse selhal */
+        if (abort)
+        {
+            free(*arr);
+            *arr = NULL;
+            return -1;
+        }
+
+        /* Jelikoz nic vyse neselhalo:
+        *  Nyni by melo jit bez problemu ulozit 
+        *  nactena data z aktualniho radku */
+        current_obj.id = id;
+        current_obj.x = x;  // pozor, zde probiha konverze int na float
+        current_obj.y = y;
+        /* funkce append_cluster volana z nasledujiciho radku by nemela
+        *  realokovat (cluster by vzdy mel mit kapacitu), 
+        *  proto ji ponecham takto */
+        append_cluster(&current_cluster, current_obj);
+        (*arr)[cluster_no] = current_cluster;
+        clear_cluster(&current_cluster);
+    }
 }
 
 /*
@@ -401,7 +511,14 @@ int main(int argc, char *argv[])
     struct cluster_t *clusters;
 
     // TODO
-    debug("now lets try init_cluster + clear_cluster");
+        
+    
+    return 0;
+}
+
+/*
+
+debug("now lets try init_cluster + clear_cluster");
     struct cluster_t cluster;
     struct cluster_t *c = &cluster;
     init_cluster(c, 16);  // tady muze byt c.obj NULL
@@ -446,7 +563,6 @@ int main(int argc, char *argv[])
             cluster_distance(&first_dst_cluster, &second_dst_cluster),
             &first_dst_cluster,
             &second_dst_cluster
-        );    
-    
-    return 0;
-}
+        );
+
+*/
