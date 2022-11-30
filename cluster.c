@@ -319,7 +319,19 @@ void find_neighbours(struct cluster_t *carr, int narr, int *c1, int *c2)
 {
     assert(narr > 0);
 
-    // TODO
+    // TODO done
+    float min_distance = INFINITY;
+    for (int i; i < narr; i++)
+    {
+        for (int j; j < narr; j++)
+        {
+            if (cluster_distance(carr + i, carr + j) < min_distance)
+            {
+                *c1 = i;
+                *c2 = j;
+            }
+        }
+    }
 }
 
 // pomocna funkce pro razeni shluku
