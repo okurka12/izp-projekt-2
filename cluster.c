@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <math.h> // sqrtf
+#include <math.h> // sqrtf, INFINITY
 #include <limits.h> // INT_MAX
 
 /*****************************************************************
@@ -273,7 +273,7 @@ float obj_distance(struct obj_t *o1, struct obj_t *o2)
     assert(o1 != NULL);
     assert(o2 != NULL);
 
-    // TODO
+    // TODO done
     float xdelta = o1->x - o2->x;
     float ydelta = o1->y - o2->y;
     return sqrtf(xdelta * xdelta + ydelta * ydelta);
@@ -289,7 +289,24 @@ float cluster_distance(struct cluster_t *c1, struct cluster_t *c2)
     assert(c2 != NULL);
     assert(c2->size > 0);
 
-    // TODO
+    // TODO done
+    float min_distance = INFINITY;
+    float current_distance;
+    for (int i = 0; i < c1->size; i++)
+    {
+        for (int j = 0; j < c2->size; j++)
+        {
+            if (
+                (current_distance = obj_distance(c1->obj + i, c2->obj + j)) 
+                < 
+                min_distance
+               )
+            {
+                min_distance = current_distance;
+            }
+        }
+    }
+    return min_distance;
 }
 
 /*
@@ -398,7 +415,26 @@ int main(int argc, char *argv[])
     }
     merge_clusters(&first_cluster, &second_cluster);
 
-    
+    debug("now lets_try cluster_distance");
+    struct cluster_t first_dst_cluster;
+    struct cluster_t second_dst_cluster;
+    init_cluster(&first_dst_cluster, 2);
+    init_cluster(&second_dst_cluster, 1);
+    append_cluster(&first_dst_cluster, test_obj);
+    append_cluster(&first_dst_cluster, test_obj);
+    append_cluster(&second_dst_cluster, test_obj);
+    first_dst_cluster.obj[0].x = 0;
+    first_dst_cluster.obj[0].y = 0;
+    first_dst_cluster.obj[1].x = 1;
+    first_dst_cluster.obj[0].y = 0;
+    second_dst_cluster.obj[0].x = 11;
+    second_dst_cluster.obj[0].y = 0;
+    dfmt(
+            "%f je vzdalenost mezi clustery na %p a %p",
+            cluster_distance(&first_dst_cluster, &second_dst_cluster),
+            &first_dst_cluster,
+            &second_dst_cluster
+        );    
     
     return 0;
 }
