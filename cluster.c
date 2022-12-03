@@ -99,11 +99,11 @@ void init_cluster(struct cluster_t *c, int cap)
     c->obj = malloc(sizeof(struct obj_t) * cap);
     if (c->obj == NULL)
     {
-        dfmt("allocating failed for cluster_t at %p", c);
+        dfmt("allocating failed for cluster_t at %p", (void*)c);
         c->capacity = 0;
         return;
     }
-    dfmt("allocated memory for %d obj_ts in cluster_t at %p", cap, c);
+    dfmt("allocated memory for %d obj_ts in cluster_t at %p", cap, (void*)c);
     c->capacity = cap;
 }
 
@@ -124,11 +124,11 @@ void clear_cluster(struct cluster_t *c)
     for (int i = 0; i < c->capacity; i++)
     {
         c->obj[i] = empty_obj;
-        dfmt("zeroed %dth element of cluster_t at %p", i, c);
+        dfmt("zeroed %dth element of cluster_t at %p", i, (void*)c);
     }
 
     c->size = 0;
-    dfmt("set size to zero for cluster_t at %p", c);
+    dfmt("set size to zero for cluster_t at %p", (void*)c);
 }
 
 /// Chunk of cluster objects. Value recommended for reallocation.
@@ -167,7 +167,7 @@ void append_cluster(struct cluster_t *c, struct obj_t obj)
     // TODO done
     dfmt(
         "appending to cluster_t at %p (size %d, capacity %d)", 
-        c, 
+        (void*)c, 
         c->size, 
         c->capacity
         );
@@ -186,7 +186,7 @@ void append_cluster(struct cluster_t *c, struct obj_t obj)
 
     dfmt(
         "appended successfully to cluster_t at %p (size %d, capacity %d)", 
-        c, 
+        (void*)c, 
         c->size, 
         c->capacity
         );
@@ -212,10 +212,10 @@ void merge_clusters(struct cluster_t *c1, struct cluster_t *c2)
         "merging clusters at "
         "%p (size - %d, capacity %d) and " 
         "%p (size - %d, capacity %d)", 
-        c1, 
+        (void*)c1, 
         c1->size, 
         c1->capacity, 
-        c2, 
+        (void*)c2, 
         c2->size, 
         c2->capacity
         );
@@ -229,10 +229,10 @@ void merge_clusters(struct cluster_t *c1, struct cluster_t *c2)
         "merged clusters at "
         "%p (size - %d, capacity %d) and " 
         "%p (size - %d, capacity %d)", 
-        c1, 
+        (void*)c1, 
         c1->size, 
         c1->capacity, 
-        c2, 
+        (void*)c2, 
         c2->size, 
         c2->capacity
         );
@@ -394,7 +394,8 @@ int load_clusters(char *filename, struct cluster_t **arr)
     if ((file_obj = fopen(filename, "r")) == NULL)
     {
         *arr = NULL;
-        fprintf(stderr, "\"%s\" does not exist.\n");
+        fprintf(stderr, "\"%s\" either does not exist or cluster is lacking"
+        " permission to open it\n", filename);
         return -1;
     }
 
@@ -408,7 +409,7 @@ int load_clusters(char *filename, struct cluster_t **arr)
         fprintf(stderr, "Given file is apparently empty.\n");
         return -1;
     }
-    dfmt("nacten prvni radek \"%s\"", first_line);
+    dfmt("first line of %s:\n%s", filename, first_line);
     
     if (sscanf(first_line, "count=%i", &cluster_count) != 1)
     {
@@ -416,17 +417,21 @@ int load_clusters(char *filename, struct cluster_t **arr)
         fprintf(stderr, "Wrong formatted first line.\n");
         return -1;
     }
+    dfmt("looking for %d clusters", cluster_count);
 
     /* V tento moment uz docela jiste mame pocet shluku,
     *  pojdme alokovat pamet. */
     if ((*arr = malloc(cluster_count * sizeof(struct cluster_t))) == NULL)
     {
-        fprintf(stderr, "Memory for %d clusters couldn't be allocated\n");
+        fprintf(
+                stderr, "Memory for %d clusters couldn't be allocated\n", 
+                cluster_count
+               );
         return -1;
     }
 
     /* Prostor pro struktury shluku mame, nyni je nacteme ze souboru */
-    char current_cluster_line[cluster_line_maxlen];
+    char curr_clust_line[cluster_line_maxlen];
     struct cluster_t current_cluster;
     struct obj_t current_obj;
     int id, x, y;
@@ -436,33 +441,36 @@ int load_clusters(char *filename, struct cluster_t **arr)
     for (int cluster_no = 0; cluster_no < cluster_count; cluster_no++)
     {
         /* nacteni radku */
-        if (fgets(current_cluster_line, cluster_line_maxlen, file_obj) == NULL)
+        if (fgets(curr_clust_line, cluster_line_maxlen, file_obj) == NULL)
         {
             fprintf(stderr, "Error parsing line %d\n", cluster_no + 2);
             abort = 1;
         }
+        dfmt("%dth line of %s:\n%s", cluster_no, filename, curr_clust_line);
 
         /* parsovani radku */
-        if (sscanf(current_cluster_line, "%i %i %i", &id, &x, &y) != 3)
+        if (sscanf(curr_clust_line, "%i %i %i", &id, &x, &y) != 3)
         {
             fprintf(stderr, "Wrong format on line %d\n", cluster_no + 2);
             abort = 1;
         }
+        dfmt("parameters read: id=%d, x=%d, y=%d", id, x, y);
 
         /* kontrola jestli neskoncil soubor */
         if (feof(file_obj) && cluster_no < cluster_count - 1)
         {
             fprintf(
-                    stderr, 
+                    stderr,
                     "Too few clusters (should be %d, found %d)\n", 
                     cluster_count, 
-                    cluster_no
+                    cluster_no + 1
                    );
             abort = 1;
         }
 
         /* pokus o inicializaci jednoobjektoveho shluku */
         init_cluster(&current_cluster, 1);
+        clear_cluster(&current_cluster);
         if (current_cluster.obj == NULL)
         {
             fprintf(stderr, "Couldnt allocate memory for cluster objects.\n");
@@ -488,7 +496,6 @@ int load_clusters(char *filename, struct cluster_t **arr)
         *  proto ji ponecham takto */
         append_cluster(&current_cluster, current_obj);
         (*arr)[cluster_no] = current_cluster;
-        clear_cluster(&current_cluster);
     }
     return cluster_count;
 }
@@ -512,18 +519,48 @@ int main(int argc, char *argv[])
     struct cluster_t *clusters;
 
     // TODO
-    if (argc < 3)
+    /* Chyba: nespravny pocet argumentu */
+    if (argc != 3)
     {
         fprintf(stderr, "Usage: cluster [FILE] [CLUSTER_COUNT]\n");
+        return 1;
     }
+
+    /* Chyba: spatny format nebo hodnota poctu shluku */
+    int target_cluster_no;
+    if (!sscanf(argv[2], "%i", &target_cluster_no) || target_cluster_no < 1)
+    {
+        fprintf(stderr, "Invalid cluster count: \"%s\"\n", argv[2]);
+        fprintf(stderr, "Usage: cluster [FILE] [CLUSTER_COUNT]\n");
+        return 1;
+    }
+    dfmt("desired cluster count is %d", target_cluster_no);
+
+    /* Nacteni objektu ze souboru */
     int cluster_count = load_clusters(argv[1], &clusters);
+
+    /* Chyba: Nepodarilo se nacist shluky ze souboru (chybova hlaseni 
+    *  implementovana v load_clusters) */
     if (cluster_count == -1 || clusters == NULL)
     {
         fprintf(stderr, "Aborting execution...\n");
         return 1;
     }
+    debug("successfully loaded clusters");
+
+    /* Chyba: Chceme po programu vice shluku nez je objektu v souboru */
+    if (target_cluster_no > cluster_count)
+    {
+        fprintf(
+                stderr, 
+                "Can't make %d clusters out of %d objects\n", 
+                target_cluster_no, 
+                cluster_count
+               );
+        return 1;
+    }
+    
     print_clusters(clusters, cluster_count);
-        
     
     return 0;
 }
@@ -573,8 +610,8 @@ debug("now lets try init_cluster + clear_cluster");
     dfmt(
             "%f je vzdalenost mezi clustery na %p a %p",
             cluster_distance(&first_dst_cluster, &second_dst_cluster),
-            &first_dst_cluster,
-            &second_dst_cluster
+            (void*)&first_dst_cluster,
+            (void*)&second_dst_cluster
         );
 
 */
