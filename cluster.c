@@ -224,6 +224,7 @@ void merge_clusters(struct cluster_t *c1, struct cluster_t *c2)
     {
         append_cluster(c1, c2->obj[i]);
     }
+    sort_cluster(c1);
 
     dfmt(
         "merged clusters at "
@@ -323,13 +324,17 @@ void find_neighbours(struct cluster_t *carr, int narr, int *c1, int *c2)
     assert(narr > 0);
 
     // TODO done
-    float min_distance = INFINITY;
-    for (int i; i < narr; i++)
+    debug("find neighbours called");
+    float min_dst = INFINITY;
+    float dst;
+    for (int i = 0; i < narr; i++)
     {
-        for (int j; j < narr; j++)
+        for (int j = 0; j < narr; j++)
         {
-            if (cluster_distance(carr + i, carr + j) < min_distance)
+            dst = cluster_distance(carr + i, carr + j);
+            if (i != j && dst < min_dst)
             {
+                min_dst = dst;
                 *c1 = i;
                 *c2 = j;
             }
@@ -519,6 +524,7 @@ int main(int argc, char *argv[])
     struct cluster_t *clusters;
 
     // TODO
+    
     /* Chyba: nespravny pocet argumentu */
     if (argc != 3)
     {
@@ -559,59 +565,35 @@ int main(int argc, char *argv[])
                );
         return 1;
     }
-    
+
+    /* Nasledujici cyklus merguje sousedy nez 
+    *  je dosazeno ciloveho poctu shluku */
+    char done = cluster_count == target_cluster_no;
+    int idx1;
+    int idx2;
+    struct cluster_t tmp_cluster;
+    while (!done)
+    {
+        find_neighbours(clusters, cluster_count, &idx1, &idx2);
+        merge_clusters(clusters + idx1, clusters + idx2);
+
+        /* Swap */
+        tmp_cluster = clusters[cluster_count - 1];
+        clusters[cluster_count - 1] = clusters[idx2];
+        clusters[idx2] = tmp_cluster;
+
+        clear_cluster(clusters + cluster_count - 1);  // uvolneni pameti
+        cluster_count--;
+        done = cluster_count == target_cluster_no;
+    }
     print_clusters(clusters, cluster_count);
+
+    /* Uvolneni pameti */
+    for (int i; i < cluster_count; i++)
+    {
+        clear_cluster(clusters + i);
+    }
+    free(clusters);
     
     return 0;
 }
-
-/*
-
-debug("now lets try init_cluster + clear_cluster");
-    struct cluster_t cluster;
-    struct cluster_t *c = &cluster;
-    init_cluster(c, 16);  // tady muze byt c.obj NULL
-    clear_cluster(c);
-
-    debug("now lets try append_cluster");
-    struct obj_t test_obj;
-    append_cluster(c, test_obj); // tady muze byt c.obj NULL
-    for (int i = 0; i < 15; i++)
-    {
-        append_cluster(c, test_obj);
-    }
-    
-    debug("now lets try merge_clusters");
-    struct cluster_t first_cluster;
-    struct cluster_t second_cluster;
-    init_cluster(&first_cluster, 64);
-    init_cluster(&second_cluster, 64);
-    for (int i = 0; i < 16; i++)
-    {
-        append_cluster(&first_cluster, test_obj);
-        append_cluster(&second_cluster, test_obj);
-    }
-    merge_clusters(&first_cluster, &second_cluster);
-
-    debug("now lets_try cluster_distance");
-    struct cluster_t first_dst_cluster;
-    struct cluster_t second_dst_cluster;
-    init_cluster(&first_dst_cluster, 2);
-    init_cluster(&second_dst_cluster, 1);
-    append_cluster(&first_dst_cluster, test_obj);
-    append_cluster(&first_dst_cluster, test_obj);
-    append_cluster(&second_dst_cluster, test_obj);
-    first_dst_cluster.obj[0].x = 0;
-    first_dst_cluster.obj[0].y = 0;
-    first_dst_cluster.obj[1].x = 1;
-    first_dst_cluster.obj[0].y = 0;
-    second_dst_cluster.obj[0].x = 11;
-    second_dst_cluster.obj[0].y = 0;
-    dfmt(
-            "%f je vzdalenost mezi clustery na %p a %p",
-            cluster_distance(&first_dst_cluster, &second_dst_cluster),
-            (void*)&first_dst_cluster,
-            (void*)&second_dst_cluster
-        );
-
-*/
