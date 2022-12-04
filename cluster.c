@@ -113,22 +113,11 @@ void init_cluster(struct cluster_t *c, int cap)
 void clear_cluster(struct cluster_t *c)
 {
     // TODO done
-
-    /* Naplneni nedefinovanych polozek shluku nulovym objektem asi neni 
-    *  potreba, ale uz jsem to napsal, tak to tu necham. */
-    struct obj_t empty_obj;
-    empty_obj.id = 0;
-    empty_obj.x = 0;
-    empty_obj.y = 0;
-
-    for (int i = 0; i < c->capacity; i++)
-    {
-        c->obj[i] = empty_obj;
-        dfmt("zeroed %dth element of cluster_t at %p", i, (void*)c);
-    }
-
+    c->capacity = 0;
     c->size = 0;
-    dfmt("set size to zero for cluster_t at %p", (void*)c);
+    free(c->obj);
+    c->obj = NULL;
+    dfmt("cleared cluster_t at %p", (void*)c);
 }
 
 /// Chunk of cluster objects. Value recommended for reallocation.
@@ -475,7 +464,6 @@ int load_clusters(char *filename, struct cluster_t **arr)
 
         /* pokus o inicializaci jednoobjektoveho shluku */
         init_cluster(&current_cluster, 1);
-        clear_cluster(&current_cluster);
         if (current_cluster.obj == NULL)
         {
             fprintf(stderr, "Couldnt allocate memory for cluster objects.\n");
@@ -501,6 +489,8 @@ int load_clusters(char *filename, struct cluster_t **arr)
         *  proto ji ponecham takto */
         append_cluster(&current_cluster, current_obj);
         (*arr)[cluster_no] = current_cluster;
+        current_cluster.capacity = 0;
+        current_cluster.size = 0;
     }
     return cluster_count;
 }
