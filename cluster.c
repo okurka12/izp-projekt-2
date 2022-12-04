@@ -484,6 +484,7 @@ int load_clusters(char *filename, struct cluster_t **arr)
         {
             free(*arr);
             *arr = NULL;
+            fclose(file_obj);
             return -1;
         }
 
@@ -501,6 +502,7 @@ int load_clusters(char *filename, struct cluster_t **arr)
         current_cluster.capacity = 0;
         current_cluster.size = 0;
     }
+    fclose(file_obj);
     return cluster_count;
 }
 
