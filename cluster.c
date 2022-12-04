@@ -7,8 +7,17 @@
 **  2022-11-28  **
 **              **
 ** Last edited: **
-**  2022-11-28  **
+**  2022-12-04  **
 *****************/
+
+/* 
+* Obecne poznamky:
+* drzel jsem se stylu kostry, tedy program je vlastne cely anglicky, 
+* ale je cesky komentovany
+* 
+* Psal jsem jenom pod komentare // TODO
+* 
+*/
 
 /**
  * Kostra programu pro 2. projekt IZP 2022/23
@@ -94,7 +103,7 @@ void init_cluster(struct cluster_t *c, int cap)
     assert(c != NULL);
     assert(cap >= 0);
 
-    // TODO done
+    // TODO
     c->size = 0;
     c->obj = malloc(sizeof(struct obj_t) * cap);
     if (c->obj == NULL)
@@ -112,7 +121,7 @@ void init_cluster(struct cluster_t *c, int cap)
  */
 void clear_cluster(struct cluster_t *c)
 {
-    // TODO done
+    // TODO
     c->capacity = 0;
     c->size = 0;
     free(c->obj);
@@ -153,7 +162,7 @@ struct cluster_t *resize_cluster(struct cluster_t *c, int new_cap)
  */
 void append_cluster(struct cluster_t *c, struct obj_t obj)
 {
-    // TODO done
+    // TODO 
     dfmt(
         "appending to cluster_t at %p (size %d, capacity %d)", 
         (void*)c, 
@@ -196,7 +205,7 @@ void merge_clusters(struct cluster_t *c1, struct cluster_t *c2)
     assert(c1 != NULL);
     assert(c2 != NULL);
 
-    // TODO done
+    // TODO 
     dfmt(
         "merging clusters at "
         "%p (size - %d, capacity %d) and " 
@@ -241,7 +250,7 @@ int remove_cluster(struct cluster_t *carr, int narr, int idx)
     assert(idx < narr);
     assert(narr > 0);
 
-    // TODO done
+    // TODO
     /*
         iteruje skrze pole a v momente kdy narazi na polozku k odstraneni
         posouva v kazde dalsi iteraci prvky o jeden vlevo
@@ -266,7 +275,7 @@ float obj_distance(struct obj_t *o1, struct obj_t *o2)
     assert(o1 != NULL);
     assert(o2 != NULL);
 
-    // TODO done
+    // TODO
     float xdelta = o1->x - o2->x;
     float ydelta = o1->y - o2->y;
     return sqrtf(xdelta * xdelta + ydelta * ydelta);
@@ -282,7 +291,7 @@ float cluster_distance(struct cluster_t *c1, struct cluster_t *c2)
     assert(c2 != NULL);
     assert(c2->size > 0);
 
-    // TODO done
+    // TODO
     float min_distance = INFINITY;
     float current_distance;
     for (int i = 0; i < c1->size; i++)
@@ -312,7 +321,7 @@ void find_neighbours(struct cluster_t *carr, int narr, int *c1, int *c2)
 {
     assert(narr > 0);
 
-    // TODO done
+    // TODO
     debug("find neighbours called");
     float min_dst = INFINITY;
     float dst;
